@@ -1,86 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name='referrer' content='no-referrer' />
-    <title>clearkey</title>
-    <meta content='width=device-width, initial-scale=1' name='viewport'>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
-<style>
-*{margin:0;padding:0;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:-moz-none;-o-user-select:none;user-select:none}
-html{overflow: hidden;}body {font:Arial,sans-serif;background-color:#000;color:#fff;height:100%;width: 100%;overflow:hidden;position:absolute;margin:0;padding:0;}#player {width:100%;height:100%;margin:0;padding:0;overflow:hidden;}video{width:100%;height:100%}
-</style>  
-
-
+  <meta charset="UTF-8">
+  <title>Professional DRM Video Player</title>
+  <meta name="description" content="Professional DRM video player with ClearKey support. Easily load and play DRM-protected videos.">
+  <meta name="keywords" content="DRM video player, ClearKey, Shaka Player, DASH streaming, protected content">
+  <meta name="author" content="shakaplayer.vercel.app">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <link rel="shortcut icon" type="image/x-icon" href="/logo.png" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      width: 80%;
+      max-width: 600px;  
+      height: auto; 
+    }
+    input, button {
+      width: 80%;
+      padding: 10px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 5px;
+    }
+    input {
+      background: rgba(255, 255, 255, 0.8);
+      color: #333;
+    }
+    button {
+      background: #ff5722;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #e64a19;
+    }
+    video {
+      width: 100%;
+      max-width: 640px; 
+      max-height: 380px; 
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .hint {
+      font-size: 0.9em;
+      color: #ddd;
+      margin-bottom: 10px;
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #ddd;
+      text-align: center;
+    }
+  </style>
+  <!-- Include Shaka Player library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.2.0/shaka-player.compiled.js"></script>
 </head>
-<body style="padding: 0px; margin:0px;">
-
-<script src="//ssl.p.jwpcdn.com/player/v/8.21.0/jwplayer.js"></script>
-<script> jwplayer.key = 'ITWMv7t88JGzI0xPwW8I0+LveiXX9SWbfdmt0ArUSyc='; </script>
-<div id="player"></div>
-
-
-<script>
-
-function getParameterByName(name, url) {
-    if (!url) url = window.location.href;
-    name = name.replace(/[\[\]]/g, '\\$&');
-    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-        results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, ' '));
-}
-
-var file = getParameterByName('file');
-
-var src = getParameterByName('src');
-if (src == 0) {alert('Vuelv');}
-
-
-
-
-var keyid = getParameterByName('keyid');
-if (keyid == 0) {alert('keyid');}
-
-
- var key = getParameterByName('key');
-if (key == 0) {alert('key');}
-
-if (file) {
-
-
-  var playerInstance = jwplayer("player");
-
-  playerInstance.setup({
-    playlist: [{
-      "title": "",
-      "description": "",
-      "image": "",
-      "sources": [{
-        "default": false,
-        "type": "dash",
-        "file": file,
-        "drm": {
-          "clearkey": {
-            "keyId":keyid,
-            "key":key
-          }
-        },
-        "label": "0"
-      }]
-    }],
-    width: "100%",
-    height: "100%",
-    autostart: false,
-    logo: {
-      file: '',
-      link: '',
-      position: 'top-right'
-    },
-    sharing: {}
-  });
-}
-</script>
+<body>
+  <div class="container">
+    <h1>Professional DRM Video Player</h1>
+    <input id="manifestUri" type="text" placeholder="Enter stream URL">
+    <input id="clearKey" type="text" placeholder="Enter ClearKey as keyid:id">
+    <button id="playButton">Play Video</button>
+    <video id="video" controls></video>
+  </div>
+  <script>
+    const video = document.getElementById('video');
+    const player = new shaka.Player(video);
+    document.getElementById('playButton').addEventListener('click', () => {
+      const manifestUri = document.getElementById('manifestUri').value;
+      const clearKeyInput = document.getElementById('clearKey').value;
+      const [keyId, key] = clearKeyInput.split(':');
+      const clearKeyConfig = {
+        clearKeys: {
+          [keyId]: key
+        }
+      };
+      player.configure({
+        drm: {
+          clearKeys: clearKeyConfig.clearKeys
+        }
+      });
+      player.load(manifestUri).then(() => {
+        console.log('The video has been loaded successfully!');
+      }).catch(error => {
+        console.error('Error loading video:', error);
+      });
+    });
+    if (window.location.hostname !== 'shakaplayer.vercel.app') {
+      setTimeout(function() {
+        window.location.href = 'http://shakaplayer.vercel.app';
+      }, 15000);
+    }
+  </script>
+  <div style="display:none">
+    <!-- Histats.com  (div with counter) -->
+    <div id="histats_counter"></div>
+    <!-- Histats.com  START  (aync)-->
+    <script type="text/javascript">var _Hasync= _Hasync|| [];
+    _Hasync.push(['Histats.start', '1,4740892,4,24,200,50,00010000']);
+    _Hasync.push(['Histats.fasi', '1']);
+    _Hasync.push(['Histats.track_hits', '']);
+    (function() {
+      var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+      hs.src = ('//s10.histats.com/js15_as.js');
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+    })();</script>
+    <noscript><a href="/" target="_blank"><img  src="//sstatic1.histats.com/0.gif?4740892&101" alt="site hit counter" border="0"></a></noscript>
+    <!-- Histats.com  END  -->
+  </div>
+  <div class="footer">
+    © 2024 Shaka Player. All rights reserved. | <a href="http://shakaplayer.vercel.app" style="color: #ff5722;">Visit our website</a>
+  </div>
 </body>
 </html>
